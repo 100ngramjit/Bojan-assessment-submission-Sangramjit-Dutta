@@ -1,32 +1,68 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useData } from "../state/DataContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { List } from "react-window";
 
 const Row = ({ index, style, items }) => {
   const item = items[index];
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [isPressed, setIsPressed] = React.useState(false);
+
   if (!item) return null;
 
   return (
     <div
       style={{
         ...style,
-        display: "flex",
-        alignItems: "center",
-        padding: "8px 16px",
-        borderBottom: "1px solid #eee",
+        padding: "10px",
         boxSizing: "border-box",
       }}
     >
-      <Link
-        to={`/items/${item.id}`}
-        style={{ textDecoration: "none", color: "#2563eb" }}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "8px 16px",
+          border: "3px solid #000",
+          boxShadow: isPressed ? "none" : "4px 4px 0px #000",
+          background: isHovered ? "#928fe8" : "#fff",
+          height: "100%",
+          boxSizing: "border-box",
+          cursor: "pointer",
+          transform: isPressed ? "translate(4px, 4px)" : "translate(0, 0)",
+          transition: "all 0.1s ease-in-out",
+        }}
+        onClick={() => navigate(`/items/${item.id}`)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          setIsPressed(false);
+        }}
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
       >
-        {item.name}
-      </Link>
-      <span style={{ marginLeft: "auto", color: "#666", fontSize: "14px" }}>
-        ${item.price}
-      </span>
+        <Link
+          to={`/items/${item.id}`}
+          style={{ textDecoration: "none", color: "#000", fontWeight: "700" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {item.name}
+        </Link>
+        <span
+          style={{
+            marginLeft: "auto",
+            color: "#000",
+            fontSize: "14px",
+            fontWeight: "bold",
+            background: "#bbf7d0", // Light green for price tag feel
+            padding: "4px 8px",
+            border: "2px solid #000",
+          }}
+        >
+          ${item.price}
+        </span>
+      </div>
     </div>
   );
 };
@@ -80,20 +116,19 @@ function Items() {
           <div
             key={i}
             style={{
-              height: "40px",
-              background:
-                "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-              backgroundSize: "200% 100%",
-              animation: "shimmer 1.5s infinite",
-              marginBottom: "8px",
-              borderRadius: "4px",
+              height: "60px",
+              background: "#e0e0e0",
+              border: "3px solid #000",
+              boxShadow: "4px 4px 0px #000",
+              animation: "pulse 0.8s infinite alternate",
+              marginBottom: "16px",
             }}
           />
         ))}
         <style>{`
-          @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+          @keyframes pulse {
+            0% { opacity: 1; }
+            100% { opacity: 0.5; }
           }
         `}</style>
       </div>
@@ -117,14 +152,16 @@ function Items() {
             width: "100%",
             padding: "12px 16px",
             fontSize: "16px",
-            border: "2px solid #e5e7eb",
-            borderRadius: "8px",
+            border: "3px solid #000",
+            borderRadius: "0px",
+            boxShadow: "4px 4px 0px #000",
             outline: "none",
-            transition: "border-color 0.2s",
             boxSizing: "border-box",
+            backgroundColor: "#fff",
+            fontWeight: "bold",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#2563eb")}
-          onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+          onFocus={(e) => (e.target.style.backgroundColor = "#fffde7")}
+          onBlur={(e) => (e.target.style.backgroundColor = "#fff")}
           aria-label="Search items"
         />
       </div>
@@ -135,20 +172,18 @@ function Items() {
         {debouncedQuery && ` matching "${debouncedQuery}"`}
       </div>
 
-      {/* Virtualized List - react-window v2 API */}
       {items.length > 0 ? (
         <div
           style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-            overflow: "hidden",
+            border: "2px solid #000",
+            backgroundColor: "#f3f4f6",
           }}
         >
           <List
             height={400}
             width="100%"
             rowCount={items.length}
-            rowHeight={50}
+            rowHeight={80}
             rowComponent={Row}
             rowProps={{ items }}
           />
@@ -175,12 +210,14 @@ function Items() {
           style={{
             padding: "10px 20px",
             fontSize: "14px",
-            border: "none",
-            borderRadius: "6px",
-            background: currentPage <= 1 ? "#e5e7eb" : "#2563eb",
-            color: currentPage <= 1 ? "#9ca3af" : "white",
+            border: "2px solid #000",
+            borderRadius: "0px",
+            boxShadow: currentPage <= 1 ? "none" : "2px 2px 0px #000",
+            background: currentPage <= 1 ? "#e5e7eb" : "#fff",
+            color: currentPage <= 1 ? "#9ca3af" : "#000",
             cursor: currentPage <= 1 ? "not-allowed" : "pointer",
-            transition: "background 0.2s",
+            fontWeight: "bold",
+            transition: "all 0.1s",
           }}
           aria-label="Previous page"
         >
@@ -197,14 +234,19 @@ function Items() {
           style={{
             padding: "10px 20px",
             fontSize: "14px",
-            border: "none",
-            borderRadius: "6px",
+            border: "2px solid #000",
+            borderRadius: "0px",
+            boxShadow:
+              currentPage >= pagination.totalPages
+                ? "none"
+                : "2px 2px 0px #000",
             background:
-              currentPage >= pagination.totalPages ? "#e5e7eb" : "#2563eb",
-            color: currentPage >= pagination.totalPages ? "#9ca3af" : "white",
+              currentPage >= pagination.totalPages ? "#e5e7eb" : "#000",
+            color: currentPage >= pagination.totalPages ? "#9ca3af" : "#fff",
             cursor:
               currentPage >= pagination.totalPages ? "not-allowed" : "pointer",
-            transition: "background 0.2s",
+            fontWeight: "bold",
+            transition: "all 0.1s",
           }}
           aria-label="Next page"
         >
